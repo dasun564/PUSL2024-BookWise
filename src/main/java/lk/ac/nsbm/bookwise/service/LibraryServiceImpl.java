@@ -115,21 +115,15 @@ public class LibraryServiceImpl implements LibraryService {
     @Transactional
     public BorrowResultView borrowBook(String username, Long bookId) {
         Student student = requireStudent(username);
-
-        // --- PERSONALISED RULE, band 0-4 -----------------------------------
-        long activeCount = borrowingRepository.countByStudentAndStatus(student, BorrowStatus.ACTIVE);
-        if (activeCount >= BORROW_LIMIT) {
-            throw new BorrowLimitExceededException(activeCount, BORROW_LIMIT);
-        }
-
         LocalDate today = LocalDate.now();
-        Optional<Borrowing> overdue = borrowingRepository.findFirstOverdue(student, today);
-        if (overdue.isPresent()) {
-            Borrowing od = overdue.get();
-            throw new OverdueBookHeldException(od.getBook().getTitle(), od.getDueDate(), today);
-        }
-        // --- end personalised rule ------------------------------------------
 
+        // GUARD ORDER MATTERS. Facts about the BOOK are checked first, then
+        // facts about the STUDENT. Drawing the Part D activity diagram showed
+        // that the original order was wrong: a student holding 3 books who
+        // clicked a title that was fully on loan was told "you have reached
+        // your borrowing limit" for a book they could not have borrowed
+        // anyway. The message was true but it was not the reason the request
+        // failed, and it pointed them at the wrong remedy.
         Book book = bookRepository.findByIdForUpdate(bookId)
                 .filter(Book::isActive)
                 .orElseThrow(() -> new BookNotFoundException(bookId));
@@ -137,6 +131,19 @@ public class LibraryServiceImpl implements LibraryService {
         if (book.getAvailableCopies() <= 0) {
             throw new NoCopiesAvailableException(book.getTitle(), book.getTotalCopies());
         }
+
+        // --- PERSONALISED RULE, band 0-4 -----------------------------------
+        long activeCount = borrowingRepository.countByStudentAndStatus(student, BorrowStatus.ACTIVE);
+        if (activeCount >= BORROW_LIMIT) {
+            throw new BorrowLimitExceededException(activeCount, BORROW_LIMIT);
+        }
+
+        Optional<Borrowing> overdue = borrowingRepository.findFirstOverdue(student, today);
+        if (overdue.isPresent()) {
+            Borrowing od = overdue.get();
+            throw new OverdueBookHeldException(od.getBook().getTitle(), od.getDueDate(), today);
+        }
+        // --- end personalised rule ------------------------------------------
 
         book.decrementCopies();
         Borrowing borrowing = new Borrowing(student, book, today, today.plusDays(LOAN_DAYS));
