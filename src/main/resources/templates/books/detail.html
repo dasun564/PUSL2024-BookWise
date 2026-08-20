@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Book details')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container">
+
+    <a class="btn btn-sm btn-link ps-0 mb-2" th:href="@{/books}">&larr; Back to catalogue</a>
+
+    <div th:replace="~{fragments/layout :: ruleBanner(${eligibility})}"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+
+            <span class="badge text-bg-secondary mb-2" th:text="${book.format()}">Printed Book</span>
+            <h1 class="h3 mb-1" th:text="${book.title()}">Title</h1>
+            <p class="text-muted" th:text="'by ' + ${book.author()}">by Author</p>
+
+            <dl class="row mb-4">
+                <dt class="col-sm-3">Category</dt>
+                <dd class="col-sm-9" th:text="${book.category()}">Category</dd>
+
+                <dt class="col-sm-3">ISBN</dt>
+                <dd class="col-sm-9" th:text="${book.isbn()}">ISBN</dd>
+
+                <dt class="col-sm-3">Copies held</dt>
+                <dd class="col-sm-9" th:text="${book.totalCopies()}">0</dd>
+
+                <dt class="col-sm-3">Available now</dt>
+                <dd class="col-sm-9">
+                    <span class="badge"
+                          th:classappend="${book.available()} ? 'text-bg-success' : 'text-bg-danger'"
+                          th:text="${book.availableCopies()}">0</span>
+                </dd>
+            </dl>
+
+            <!--
+              The form posts ONLY the book id. The borrower's identity is read
+              from the Spring Security session inside BorrowController, never
+              from this page - see BorrowController.borrow().
+            -->
+            <form th:action="@{/borrow/{id}(id=${book.id()})}" method="post">
+                <button class="btn btn-primary btn-lg" type="submit">Borrow this book</button>
+                <span class="ms-2 text-muted small">Loan period: 14 days</span>
+            </form>
+
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

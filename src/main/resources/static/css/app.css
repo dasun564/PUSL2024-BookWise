@@ -1,0 +1,88 @@
+/* BookWise - presentation layer only. */
+
+:root {
+    --bw-navy: #14213d;
+    --bw-accent: #1f6feb;
+    --bw-soft: #f4f6fa;
+}
+
+body {
+    background-color: var(--bw-soft);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.navbar-bookwise {
+    background-color: var(--bw-navy);
+}
+
+.navbar-bookwise .navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.brand-mark {
+    background: #fff;
+    color: var(--bw-navy);
+    border-radius: 6px;
+    padding: 0.1rem 0.45rem;
+    margin-right: 0.5rem;
+    font-weight: 800;
+}
+
+.card-book {
+    height: 100%;
+    transition: box-shadow 0.15s ease-in-out;
+    border: 1px solid #e3e7ef;
+}
+
+.card-book:hover {
+    box-shadow: 0 0.5rem 1.25rem rgba(20, 33, 61, 0.12);
+}
+
+.rule-banner {
+    border-left: 4px solid var(--bw-accent);
+}
+
+.rule-banner.blocked {
+    border-left-color: #b02a37;
+}
+
+/* Login */
+.login-shell {
+    max-width: 26rem;
+    margin: 4rem auto;
+}
+
+.credential-table td {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.5rem 0.2rem 0;
+}
+
+.credential-table code {
+    color: var(--bw-navy);
+}
+
+/* Error pages */
+.error-shell {
+    max-width: 44rem;
+    margin: 3rem auto;
+}
+
+.error-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: #6c757d;
+}
+
+footer.site-footer {
+    background: var(--bw-navy);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+}

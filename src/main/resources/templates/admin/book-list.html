@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Manage catalogue')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h1 class="h3 mb-1">Manage catalogue</h1>
+            <p class="text-muted mb-0">Add, edit and withdraw catalogue entries.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/admin/books/new}">Add book</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Format</th>
+                    <th class="text-center">Available</th>
+                    <th>State</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="book : ${books}" th:classappend="${!book.active} ? 'table-secondary' : ''">
+                    <td>
+                        <span th:text="${book.title}">Title</span>
+                        <div class="small text-muted" th:text="'ISBN ' + ${book.isbn}">ISBN</div>
+                    </td>
+                    <td class="small" th:text="${book.author}">Author</td>
+                    <td class="small" th:text="${book.category}">Category</td>
+                    <td class="small" th:text="${book.formatLabel}">Format</td>
+                    <td class="text-center">
+                        <span th:text="${book.availableCopies} + ' / ' + ${book.totalCopies}">0 / 0</span>
+                    </td>
+                    <td>
+                        <span class="badge text-bg-success" th:if="${book.active}">In catalogue</span>
+                        <span class="badge text-bg-secondary" th:unless="${book.active}">Withdrawn</span>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-1">
+                            <a class="btn btn-sm btn-outline-secondary"
+                               th:href="@{/admin/books/{id}/edit(id=${book.id})}">Edit</a>
+
+                            <!--
+                              "Delete" performs a SOFT delete: BookAdminService
+                              sets active = false so that every historical
+                              Borrowing row keeps a valid foreign key. See the
+                              Part C admin-delete sequence diagram.
+                            -->
+                            <form th:if="${book.active}"
+                                  th:action="@{/admin/books/{id}/delete(id=${book.id})}"
+                                  method="post" class="m-0"
+                                  onsubmit="return confirm('Withdraw this book from the catalogue? Borrowing history will be preserved.');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+
+                            <form th:unless="${book.active}"
+                                  th:action="@{/admin/books/{id}/restore(id=${book.id})}"
+                                  method="post" class="m-0">
+                                <button class="btn btn-sm btn-outline-success" type="submit">Restore</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

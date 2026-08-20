@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('My borrowings')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container">
+
+    <h1 class="h3 mb-3">My borrowings</h1>
+
+    <div th:if="${returned != null}" class="alert alert-success">
+        <strong>Returned:</strong>
+        <span th:text="${returned.bookTitle()}">Title</span>
+        <span th:if="${returned.status().name() == 'RETURNED_LATE'}" class="badge text-bg-warning ms-1">
+            returned late
+        </span>
+        <span th:if="${returned.status().name() == 'RETURNED'}" class="badge text-bg-success ms-1">
+            returned on time
+        </span>
+    </div>
+
+    <div th:replace="~{fragments/layout :: ruleBanner(${eligibility})}"></div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Book</th>
+                    <th>Format</th>
+                    <th>Borrowed</th>
+                    <th>Due</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="loan : ${borrowings}"
+                    th:classappend="${loan.overdue()} ? 'table-danger' : ''">
+
+                    <td>
+                        <div th:text="${loan.bookTitle()}">Title</div>
+                        <div class="small text-muted" th:text="${loan.bookAuthor()}">Author</div>
+                    </td>
+
+                    <td class="small" th:text="${loan.bookFormat()}">Format</td>
+
+                    <td class="small"
+                        th:text="${#temporals.format(loan.borrowDate(), 'd MMM yyyy')}">date</td>
+
+                    <td class="small">
+                        <div th:text="${#temporals.format(loan.dueDate(), 'd MMM yyyy')}">date</div>
+                        <div class="small text-danger" th:if="${loan.overdue()}"
+                             th:text="${-loan.daysRemaining()} + ' days overdue'">overdue</div>
+                        <div class="small text-muted"
+                             th:if="${loan.isActive() and !loan.overdue()}"
+                             th:text="${loan.daysRemaining()} + ' days left'">left</div>
+                    </td>
+
+                    <td>
+                        <span class="badge text-bg-primary"
+                              th:if="${loan.isActive() and !loan.overdue()}">On loan</span>
+                        <span class="badge text-bg-danger"
+                              th:if="${loan.overdue()}">Overdue</span>
+                        <span class="badge text-bg-success"
+                              th:if="${loan.status().name() == 'RETURNED'}">Returned</span>
+                        <span class="badge text-bg-warning"
+                              th:if="${loan.status().name() == 'RETURNED_LATE'}">Returned late</span>
+                    </td>
+
+                    <td class="text-end">
+                        <form th:if="${loan.isActive()}"
+                              th:action="@{/return/{id}(id=${loan.id()})}" method="post" class="m-0">
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Return</button>
+                        </form>
+                        <span th:unless="${loan.isActive()}" class="text-muted small"
+                              th:text="${loan.returnDate() != null}
+                                       ? ${#temporals.format(loan.returnDate(), 'd MMM yyyy')} : ''">
+                        </span>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(borrowings)}">
+                    <td colspan="6" class="text-center text-muted py-5">
+                        You have not borrowed any books yet.
+                        <a th:href="@{/books}">Browse the catalogue</a>.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

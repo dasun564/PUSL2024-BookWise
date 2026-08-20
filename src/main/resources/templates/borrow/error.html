@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Unable to complete')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container">
+    <div class="error-shell">
+
+        <!--
+          One page, but never one message. Every field below is supplied by the
+          specific BookWiseException that was thrown, so each failure reason
+          reads differently:
+            BOOK_NOT_FOUND        - the book does not exist
+            NO_COPIES_AVAILABLE   - it exists but all copies are out
+            BORROW_LIMIT_EXCEEDED - personalised rule: 3-book limit
+            OVERDUE_BOOK_HELD     - personalised rule: overdue book held
+        -->
+        <div class="card shadow-sm border-danger">
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge text-bg-danger">Borrow request rejected</span>
+                    <span class="badge text-bg-warning" th:if="${ruleViolation}">
+                        Personalised borrowing rule
+                    </span>
+                </div>
+
+                <h1 class="h4 mb-3" th:text="${errorTitle}">Error title</h1>
+
+                <p class="lead mb-4" th:text="${errorMessage}">Specific explanation of what went wrong.</p>
+
+                <div class="alert alert-light border">
+                    <strong>What you can do:</strong>
+                    <span th:text="${errorAction}">Suggested action.</span>
+                </div>
+
+                <div th:if="${ruleViolation}" class="alert alert-warning small">
+                    <strong>Library borrowing policy:</strong>
+                    a student may hold at most <strong>3</strong> books at a time, and may not
+                    borrow while any book on their account is overdue.
+                </div>
+
+                <div class="d-flex gap-2 align-items-center">
+                    <a class="btn btn-primary" th:href="@{/books}">Back to catalogue</a>
+                    <a class="btn btn-outline-secondary" th:href="@{/my-books}">My borrowings</a>
+                    <span class="error-code ms-auto" th:text="${errorCode}">ERROR_CODE</span>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

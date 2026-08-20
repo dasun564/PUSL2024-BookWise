@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Borrow confirmed')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container">
+    <div class="error-shell">
+
+        <div class="card shadow-sm border-success">
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge text-bg-success">Borrow successful</span>
+                    <span class="error-code" th:text="'LOAN REFERENCE #' + ${result.borrowingId()}">LOAN #</span>
+                </div>
+
+                <h1 class="h4 mb-3">Your loan is confirmed</h1>
+
+                <!--
+                  Part E requires the confirmation to show the book details
+                  together with the borrowing student's OWN name. Both come
+                  from BorrowResultView, which the service built from the
+                  session-authenticated student - not from any form input.
+                -->
+                <p class="lead">
+                    <span th:text="${result.studentName()}">Student name</span>
+                    <span class="badge text-bg-dark align-middle" th:text="${result.studentUsername()}">username</span>
+                    has borrowed:
+                </p>
+
+                <div class="card bg-light border-0 mb-4">
+                    <div class="card-body">
+                        <h2 class="h5 mb-1" th:text="${result.bookTitle()}">Title</h2>
+                        <p class="text-muted mb-2" th:text="'by ' + ${result.bookAuthor()}">by Author</p>
+                        <dl class="row mb-0 small">
+                            <dt class="col-sm-4">Format</dt>
+                            <dd class="col-sm-8" th:text="${result.bookFormat()}">Printed Book</dd>
+
+                            <dt class="col-sm-4">Category</dt>
+                            <dd class="col-sm-8" th:text="${result.bookCategory()}">Category</dd>
+
+                            <dt class="col-sm-4">ISBN</dt>
+                            <dd class="col-sm-8" th:text="${result.bookIsbn()}">ISBN</dd>
+
+                            <dt class="col-sm-4">Borrowed on</dt>
+                            <dd class="col-sm-8"
+                                th:text="${#temporals.format(result.borrowDate(), 'd MMMM yyyy')}">date</dd>
+
+                            <dt class="col-sm-4">Due back</dt>
+                            <dd class="col-sm-8">
+                                <strong th:text="${#temporals.format(result.dueDate(), 'd MMMM yyyy')}">date</strong>
+                                <span class="text-muted"
+                                      th:text="'(' + ${result.loanDays()} + ' day loan)'">(14 day loan)</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Copies still available</dt>
+                            <dd class="col-sm-8" th:text="${result.copiesRemaining()}">0</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a class="btn btn-primary" th:href="@{/my-books}">View my borrowings</a>
+                    <a class="btn btn-outline-secondary" th:href="@{/books}">Back to catalogue</a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

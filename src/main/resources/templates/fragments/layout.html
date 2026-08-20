@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'BookWise - ' + ${pageTitle}">BookWise</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<!-- ===================== Navigation ===================== -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark navbar-bookwise mb-4">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" th:href="@{/}">
+            <span class="brand-mark">BW</span> BookWise
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item" sec:authorize="hasRole('STUDENT')">
+                    <a class="nav-link" th:href="@{/books}">Catalogue</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('STUDENT')">
+                    <a class="nav-link" th:href="@{/my-books}">My Borrowings</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/books}">Manage Catalogue</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/books/new}">Add Book</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3" sec:authorize="isAuthenticated()">
+                <span class="text-white-50 small">
+                    Signed in as
+                    <strong class="text-white" th:text="${currentUserFullName}">Name</strong>
+                    <span class="badge text-bg-light ms-1" th:text="${currentUsername}">username</span>
+                </span>
+                <form th:action="@{/logout}" method="post" class="m-0">
+                    <button class="btn btn-sm btn-outline-light" type="submit">Log out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ===================== Borrowing-rule banner ===================== -->
+<!--
+  Shows the student their standing against the personalised rule
+  (student 10965261, band 0-4: max 3 active loans, none while overdue)
+  BEFORE they click Borrow, not only in the rejection afterwards.
+-->
+<div th:fragment="ruleBanner(eligibility)" th:if="${eligibility != null}">
+    <div class="alert rule-banner mb-4"
+         th:classappend="${eligibility.canBorrow()} ? 'alert-light' : 'alert-warning blocked'">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <strong>Borrowing allowance:</strong>
+                <span th:text="${eligibility.activeCount()} + ' of ' + ${eligibility.limit()} + ' books on loan'">0 of 3</span>
+                <span class="text-muted"
+                      th:if="${eligibility.canBorrow()}"
+                      th:text="'- you may borrow ' + ${eligibility.remainingAllowance()} + ' more'">
+                </span>
+            </div>
+            <div th:if="${!eligibility.canBorrow()}">
+                <span class="badge text-bg-danger" th:if="${eligibility.hasOverdue()}">
+                    Blocked: overdue book held
+                </span>
+                <span class="badge text-bg-danger" th:if="${!eligibility.hasOverdue()}">
+                    Blocked: limit reached
+                </span>
+            </div>
+        </div>
+        <div class="small text-danger mt-2" th:if="${eligibility.hasOverdue()}">
+            <span th:text="'&quot;' + ${eligibility.overdueTitle()} + '&quot; was due on ' + ${#temporals.format(eligibility.overdueDueDate(), 'd MMMM yyyy')} + '. Return it to resume borrowing.'"></span>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== Flash message ===================== -->
+<div th:fragment="flash" th:if="${flash}" class="alert alert-success" th:text="${flash}"></div>
+
+<!-- ===================== Footer ===================== -->
+<footer th:fragment="footer" class="site-footer mt-5 py-3">
+    <div class="container d-flex justify-content-between flex-wrap gap-2">
+        <span>BookWise - University Library Borrowing System</span>
+        <span>PUSL2024 Software Engineering 2 &middot; Dasun Edirisinghe &middot; 10965261</span>
+    </div>
+</footer>
+
+</body>
+</html>

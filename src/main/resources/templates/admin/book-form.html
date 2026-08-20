@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Book details')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container">
+    <div class="error-shell">
+
+        <a class="btn btn-sm btn-link ps-0 mb-2" th:href="@{/admin/books}">&larr; Back to catalogue</a>
+
+        <h1 class="h3 mb-3" th:text="${editing} ? 'Edit book' : 'Add a book'">Add a book</h1>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+
+                <!--
+                  Bean Validation constraints are declared on BookForm and
+                  triggered by @Valid in AdminBookController. Messages below
+                  come from those constraints, so the same rules protect the
+                  REST endpoint without being restated here.
+                -->
+                <form th:action="${editing}
+                                 ? @{/admin/books/{id}(id=${bookForm.id})}
+                                 : @{/admin/books}"
+                      th:object="${bookForm}" method="post" novalidate>
+
+                    <input type="hidden" th:field="*{id}">
+
+                    <!-- Inside the th:object form, so #fields resolves against bookForm. -->
+                    <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger">
+                        Please correct the highlighted fields below.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="title">Title</label>
+                        <input type="text" id="title" class="form-control"
+                               th:field="*{title}"
+                               th:classappend="${#fields.hasErrors('title')} ? 'is-invalid' : ''">
+                        <div class="invalid-feedback" th:errors="*{title}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="author">Author</label>
+                        <input type="text" id="author" class="form-control"
+                               th:field="*{author}"
+                               th:classappend="${#fields.hasErrors('author')} ? 'is-invalid' : ''">
+                        <div class="invalid-feedback" th:errors="*{author}"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="isbn">ISBN</label>
+                            <input type="text" id="isbn" class="form-control"
+                                   th:field="*{isbn}"
+                                   th:classappend="${#fields.hasErrors('isbn')} ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" th:errors="*{isbn}"></div>
+                            <div class="form-text">10 or 13 digits, no dashes.</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="category">Category</label>
+                            <input type="text" id="category" class="form-control"
+                                   th:field="*{category}"
+                                   th:classappend="${#fields.hasErrors('category')} ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" th:errors="*{category}"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="totalCopies">Copies held</label>
+                            <input type="number" id="totalCopies" class="form-control" min="1"
+                                   th:field="*{totalCopies}"
+                                   th:classappend="${#fields.hasErrors('totalCopies')} ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" th:errors="*{totalCopies}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="format">Format</label>
+                            <!--
+                              Format is fixed once a book exists: it is the JPA
+                              discriminator, and changing it would mean deleting
+                              and re-inserting the row, orphaning every
+                              Borrowing that references it.
+                            -->
+                            <select id="format" class="form-select"
+                                    th:if="${!editing}" th:field="*{format}">
+                                <option value="PRINTED">Printed Book</option>
+                                <option value="EBOOK">E-Book</option>
+                            </select>
+
+                            <!-- When editing, show the format read-only but still
+                                 post it, so Bean Validation on the field passes. -->
+                            <div th:if="${editing}">
+                                <input type="text" class="form-control" readonly
+                                       th:value="${bookForm.format == 'EBOOK'} ? 'E-Book' : 'Printed Book'">
+                                <input type="hidden" th:field="*{format}">
+                                <div class="form-text">
+                                    Format cannot be changed after a book is created.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <p class="text-muted small">
+                        Complete the section matching the format chosen above.
+                    </p>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="shelfLocation">Shelf location (printed)</label>
+                            <input type="text" id="shelfLocation" class="form-control"
+                                   th:field="*{shelfLocation}" placeholder="SE-A-01">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="bookCondition">Condition (printed)</label>
+                            <input type="text" id="bookCondition" class="form-control"
+                                   th:field="*{bookCondition}" placeholder="Good">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="fileSizeMb">File size in MB (e-book)</label>
+                            <input type="number" step="0.1" id="fileSizeMb" class="form-control"
+                                   th:field="*{fileSizeMb}" placeholder="12.4">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="downloadUrl">Download URL (e-book)</label>
+                            <input type="text" id="downloadUrl" class="form-control"
+                                   th:field="*{downloadUrl}" placeholder="/downloads/title.pdf">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-primary" type="submit"
+                                th:text="${editing} ? 'Save changes' : 'Add book'">Add book</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/admin/books}">Cancel</a>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
