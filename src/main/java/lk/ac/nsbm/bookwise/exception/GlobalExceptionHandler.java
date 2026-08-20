@@ -6,7 +6,10 @@ import lk.ac.nsbm.bookwise.controller.AuthController;
 import lk.ac.nsbm.bookwise.controller.BookController;
 import lk.ac.nsbm.bookwise.controller.BorrowController;
 import org.slf4j.Logger;
+import lk.ac.nsbm.bookwise.repository.AppUserRepository;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
@@ -49,6 +52,30 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    private final AppUserRepository appUserRepository;
+
+    public GlobalExceptionHandler(AppUserRepository appUserRepository) {
+        this.appUserRepository = appUserRepository;
+    }
+
+    /**
+     * Adds the signed-in user's name to an error view.
+     *
+     * Spring does not apply a @ModelAttribute method from CurrentUserAdvice to
+     * a view produced by an @ExceptionHandler, so without this the navigation
+     * bar on every error page would read "Signed in as" followed by nothing.
+     */
+    private void addCurrentUser(ModelAndView mav) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return;
+        }
+        mav.addObject("currentUsername", auth.getName());
+        mav.addObject("currentUserFullName", appUserRepository.findByUsername(auth.getName())
+                .map(user -> user.getFullName())
+                .orElse(auth.getName()));
+    }
+
     @ExceptionHandler(BookWiseException.class)
     public ModelAndView handleBusinessFailure(BookWiseException ex, HttpServletRequest request) {
         log.warn("Business rule rejected {} {}: [{}] {}",
@@ -61,6 +88,7 @@ public class GlobalExceptionHandler {
         mav.addObject("errorAction", ex.getSuggestedAction());
         mav.addObject("errorCode", ex.getErrorCode());
         mav.addObject("ruleViolation", isPersonalisedRuleViolation(ex));
+        addCurrentUser(mav);
         return mav;
     }
 
@@ -87,6 +115,7 @@ public class GlobalExceptionHandler {
         mav.addObject("errorAction", "Please try again. If it keeps happening, contact the library desk.");
         mav.addObject("errorCode", "INTERNAL_ERROR");
         mav.addObject("ruleViolation", false);
+        addCurrentUser(mav);
         return mav;
     }
 }
